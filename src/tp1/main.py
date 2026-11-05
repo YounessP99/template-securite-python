@@ -25,7 +25,6 @@ def main():
 
     capture = Capture()
     capture.capture_traffic(args.pcap)
-    logger.info(capture.find_flag())
     capture.analyse("tcp")
     with open(args.out, "w", encoding="utf-8") as report_file:
         json.dump(capture.build_report(), report_file, indent=2)

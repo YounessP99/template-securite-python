@@ -200,8 +200,17 @@ class Capture:
 
         :return: un dictionnaire {protocols, attacks, flag}
         """
+        attacks = (
+            self.detect_arp_spoofing()
+            + self.detect_port_scan()
+            + self.detect_sql_injection()
+        )
+
+        if not attacks:
+            logger.info("Aucune activité suspecte detectee")
+
         return {
             "protocols": dict(self.get_all_protocols()),
-            "attacks": [],
-            "flag": None,
+            "attacks": attacks,
+            "flag": self.find_flag(),
         }
