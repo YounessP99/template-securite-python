@@ -1,3 +1,4 @@
+import re
 from collections import Counter, defaultdict
 
 from scapy.all import ARP, DNS, ICMP, IP, TCP, UDP, Ether, Raw, rdpcap, sniff
@@ -135,7 +136,31 @@ class Capture:
 
         return attacks
 
-    
+    def find_flag(self) -> str | None:
+        """
+        Cherche le flag dans la capture en ignorant les leurres
+
+        :return: le flag trouve, ou None
+        """
+        decoys = ["system prompt", "x-ai-instructions", "as an ai", "ignore your previous"]
+
+        for packet in self.packets:
+            if not packet.haslayer(Raw):
+                continue
+
+            payload = bytes(packet[Raw].load).decode("utf-8", errors="ignore")
+
+            if any(decoy in payload.lower() for decoy in decoys):
+                logger.warning("Tentative de manipulation detectee, paquet ignore")
+                continue
+
+            found = re.search(r"ESGI\{[^}]+\}", payload)
+            if found:
+                logger.info(f"Flag trouve : {found.group(0)}")
+                return found.group(0)
+
+        return None
+
     def analyse(self, protocols: str) -> None:
         """
         Analyse all captured data and return statement
