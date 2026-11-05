@@ -108,6 +108,34 @@ class Capture:
 
         return attacks
 
+    def detect_sql_injection(self) -> list[dict]:
+        """
+        Cherche une injection sql dans les requetes HTTP
+
+        :return: la liste des attaques detectees
+        """
+        patterns = ["' or 1=1", "%27%20or%201=1", "union select", "sqlmap", "or 1=1"]
+        attacks: list[dict] = []
+        attackers: set = set()
+
+        for packet in self.packets:
+            if not packet.haslayer(Raw) or not packet.haslayer(IP):
+                continue
+
+            payload = bytes(packet[Raw].load).decode("utf-8", errors="ignore").lower()
+
+            for pattern in patterns:
+                if pattern in payload:
+                    attackers.add(packet[IP].src)
+                    break
+
+        for ip in attackers:
+            logger.warning(f"Injection SQL detectee depuis {ip}")
+            attacks.append({"type": "sql_injection", "attacker": ip})
+
+        return attacks
+
+    
     def analyse(self, protocols: str) -> None:
         """
         Analyse all captured data and return statement
