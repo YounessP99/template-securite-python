@@ -87,6 +87,27 @@ class Capture:
 
         return attacks
 
+    def detect_port_scan(self, threshold: int = 20) -> list[dict]:
+        """
+        Detecte un scan de ports : de nombreux SYN vers des ports differents
+
+        :param threshold: nb de port distincts a partir duquel on alerte
+        :return: la liste des attaques detectees
+        """
+        attacks: list[dict] = []
+        targeted_ports: defaultdict = defaultdict(set)
+
+        for packet in self.packets:
+            if packet.haslayer(TCP) and packet[TCP].flags == "S":
+                targeted_ports[packet[IP].src].add(packet[TCP].dport)
+
+        for ip, ports in targeted_ports.items():
+            if len(ports) >= threshold:
+                logger.warning(f"scan de ports detecte depuis {ip} ({len(ports)} ports")
+                attacks.append({"type": "port_scan", "attacker": ip})
+
+        return attacks
+
     def analyse(self, protocols: str) -> None:
         """
         Analyse all captured data and return statement
