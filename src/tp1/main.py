@@ -4,8 +4,9 @@ from tp1.utils.capture import Capture
 from tp1.utils.config import logger
 from tp1.utils.report import Report
 
+
 def parse_args() -> argparse.Namespace:
-    """"
+    """
     Lit les arguments de la ligne de commande
 
     :return: les argumentsanalyses
@@ -16,12 +17,14 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--iface", help="interface reseau pour une capture live")
     return parser.parse_args()
 
+
 def main():
     logger.info("Starting TP1")
     args = parse_args()
 
     capture = Capture()
     capture.capture_traffic(args.pcap)
+    logger.info(capture.get_all_protocols())
     capture.analyse("tcp")
     summary = capture.get_summary()
 

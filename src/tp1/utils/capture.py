@@ -1,6 +1,9 @@
+from collections import Counter
+
+from scapy.all import ARP, DNS, ICMP, IP, TCP, UDP, Raw, rdpcap, sniff
+
 from src.tp1.utils.lib import choose_interface
 from tp1.utils.config import logger
-from scapy.all import rdpcap, sniff
 
 
 class Capture:
@@ -20,17 +23,45 @@ class Capture:
 
         logger.info(f"{len(self.packets)} paquets récupérés")
 
-    def sort_network_protocols(self) -> str:
+    def sort_network_protocols(self) -> list:
         """
-        Sort and return all captured network protocols
-        """
-        return ""
+        Trie les protocoles du plus au moins frequent
 
-    def get_all_protocols(self) -> str:
+        :return: une liste de tuples
         """
-        Return all protocols captured with total packets number
+        return self.get_all_protocols().most_common()
+
+    def get_all_protocols(self) -> Counter:
         """
-        return ""
+        Compte le nb de paquets par protocole
+
+        :return: un compteur {nom du protocole: nb de paquets}
+        """
+        protocols: Counter = Counter()
+
+        for packet in self.packets:
+            if packet.haslayer(ARP):
+                protocols["ARP"] += 1
+
+            if packet.haslayer(IP):
+                protocols["IP"] += 1
+
+            if packet.haslayer(TCP):
+                protocols["TCP"] += 1
+
+            if packet.haslayer(UDP):
+                protocols["UDP"] += 1
+
+            if packet.haslayer(ICMP):
+                protocols["ICMP"] += 1
+
+            if packet.haslayer(DNS):
+                protocols["DNS"] += 1
+
+            if packet.haslayer(TCP) and packet.haslayer(Raw):
+                protocols["HTTP"] += 1
+
+        return protocols
 
     def analyse(self, protocols: str) -> None:
         """
