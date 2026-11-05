@@ -1,4 +1,4 @@
-from collections import Counter
+from collections import Counter, defaultdict
 
 from scapy.all import ARP, DNS, ICMP, IP, TCP, UDP, Ether, Raw, rdpcap, sniff
 
@@ -65,6 +65,27 @@ class Capture:
                 protocols["HTTP"] += 1
 
         return protocols
+
+    def detect_arp_spoofing(self) -> list[dict]:
+        """
+        Detecte une usurpation ARP : plusieurs MAC pour une meme IP
+
+        :return: la liste des attaques detectees
+        """
+        attacks: list[dict] = []
+        announcements: defaultdict = defaultdict(Counter)
+
+        for packet in self.packets:
+            if packet.haslayer(ARP):
+                announcements[packet[ARP].psrc][packet[ARP].hwsrc] += 1
+
+        for ip, macs in announcements.items():
+            if len(macs) > 1:
+                attacker = macs.most_common()[-1][0]
+                logger.warning(f"ARP spoofing detect sur {ip} par {attacker}")
+                attacks.append({"type": "arp_spoofing", "attacker": attacker})
+
+        return attacks
 
     def analyse(self, protocols: str) -> None:
         """
