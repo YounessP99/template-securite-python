@@ -1,6 +1,6 @@
 from collections import Counter
 
-from scapy.all import ARP, DNS, ICMP, IP, TCP, UDP, Raw, rdpcap, sniff
+from scapy.all import ARP, DNS, ICMP, IP, TCP, UDP, Ether, Raw, rdpcap, sniff
 
 from src.tp1.utils.lib import choose_interface
 from tp1.utils.config import logger
@@ -40,6 +40,9 @@ class Capture:
         protocols: Counter = Counter()
 
         for packet in self.packets:
+            if packet.haslayer(Ether):
+                protocols["ETHERNET"] += 1
+
             if packet.haslayer(ARP):
                 protocols["ARP"] += 1
 
@@ -95,3 +98,15 @@ class Capture:
         """
         summary = ""
         return summary
+
+    def build_report(self) -> dict:
+        """
+        Construit le rapport d'analyse au format attendu par la correction
+
+        :return: un dictionnaire {protocols, attacks, flag}
+        """
+        return {
+            "protocols": dict(self.get_all_protocols()),
+            "attacks": [],
+            "flag": None,
+        }

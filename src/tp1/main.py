@@ -1,3 +1,4 @@
+import json
 import argparse
 
 from tp1.utils.capture import Capture
@@ -24,8 +25,10 @@ def main():
 
     capture = Capture()
     capture.capture_traffic(args.pcap)
-    logger.info(capture.get_all_protocols())
     capture.analyse("tcp")
+    with open(args.out, "w", encoding="utf-8") as report_file:
+        json.dump(capture.build_report(), report_file, indent=2)
+    logger.info(f"Rapport JSON ecrit dans {args.out}")
     summary = capture.get_summary()
 
     filename = "report.pdf"
