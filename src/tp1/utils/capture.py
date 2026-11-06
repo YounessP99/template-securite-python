@@ -87,9 +87,13 @@ class Capture:
         """
         attacks: list[dict] = []
         announcements: dict = {}
+        poisoned: dict = {}
 
         for packet in self.packets:
-            if packet.haslayer(ARP) and packet[ARP].op == 2:
+            if not packet.haslayer(ARP):
+                continue
+
+            if packet[ARP].op == 2:
                 ip = packet[ARP].psrc
                 mac = packet[ARP].hwsrc
 
@@ -99,14 +103,15 @@ class Capture:
                 if mac not in announcements[ip]:
                     announcements[ip].append(mac)
 
+            if packet[ARP].op == 1 and packet.dst != "ff:ff:ff:ff:ff:ff":
+                poisoned[packet[ARP].pdst] = packet.dst
+
         for ip, macs in announcements.items():
             if len(macs) > 1:
-                legitimate = macs[0]
+                attacker = poisoned.get(ip, macs[-1])
 
-                for mac in macs:
-                    if mac != legitimate:
-                        logger.warning(f"ARP spoofing detect sur {ip} par {mac}")
-                        attacks.append({"type": "arp_spoofing", "attacker": mac})
+                logger.warning(f"ARP spoofing detecte sur {ip} par {attacker}")
+                attacks.append({"type": "arp_spoofing", "attacker": attacker})
 
         return attacks
 
