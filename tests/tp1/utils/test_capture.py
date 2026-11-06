@@ -93,3 +93,38 @@ def test_gen_summary():
 
     # Then
     assert result == ""  # Method currently returns empty string
+
+
+def test_detect_arp_spoofing():
+    # Given
+    capture = Capture()
+    capture.packets = [
+        Ether() / ARP(op=2, psrc="192.168.245.1", hwsrc="02:89:e6:3a:b6:81"),
+        Ether() / ARP(op=2, psrc="192.168.245.1", hwsrc="02:98:2a:08:d0:a2"),
+    ]
+
+    # When
+    result = capture.detect_arp_spoofing()
+
+    # Then
+    assert len(result) == 1
+    assert result[0]["attacker"] == "02:98:2a:08:d0:a2"
+
+
+def test_detect_port_scan():
+    # Given
+    capture = Capture()
+    capture.packets = []
+
+    for port in range(1, 31):
+        capture.packets.append(
+            Ether() / IP(src="10.0.0.5") / TCP(dport=port, flags="S")
+        )
+
+    # When
+    result = capture.detect_port_scan()
+
+    # Then
+    assert len(result) == 1
+    assert result[0]["type"] == "port_scan"
+    assert result[0]["attacker"] == "10.0.0.5"

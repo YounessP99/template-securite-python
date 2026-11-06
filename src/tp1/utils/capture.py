@@ -30,7 +30,7 @@ class Capture:
         except FileNotFoundError:
             logger.error(f"Le fichier {pcap_file} est introuvable")
             self.packets = []
-        except Exception as error:
+        except Exception as error:  # noqa: BLE001
             logger.error(f"Erreur pendant la capture : {error}")
             self.packets = []
 
@@ -99,9 +99,7 @@ class Capture:
                 if mac not in announcements[ip]:
                     announcements[ip].append(mac)
 
-        for ip in announcements:
-            macs = announcements[ip]
-
+        for ip, macs in announcements.items():
             if len(macs) > 1:
                 legitimate = macs[0]
 
@@ -133,11 +131,11 @@ class Capture:
                 if port not in targeted_ports[ip]:
                     targeted_ports[ip].append(port)
 
-        for ip in targeted_ports:
-            ports = targeted_ports[ip]
-
+        for ip, ports in targeted_ports.items():
             if len(ports) >= threshold:
-                logger.warning(f"scan de ports detecte depuis {ip} ({len(ports)} ports)")
+                logger.warning(
+                    f"scan de ports detecte depuis {ip} ({len(ports)} ports)"
+                )
                 attacks.append({"type": "port_scan", "attacker": ip})
 
         return attacks
@@ -176,7 +174,12 @@ class Capture:
 
         :return: le flag trouve, ou None
         """
-        decoys = ["system prompt", "x-ai-instructions", "as an ai", "ignore your previous"]
+        decoys = [
+            "system prompt",
+            "x-ai-instructions",
+            "as an ai",
+            "ignore your previous",
+        ]
 
         for packet in self.packets:
             if not packet.haslayer(Raw):

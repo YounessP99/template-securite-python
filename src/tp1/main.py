@@ -1,5 +1,5 @@
-import json
 import argparse
+import json
 
 from tp1.utils.capture import Capture
 from tp1.utils.config import logger
@@ -12,7 +12,9 @@ def parse_args() -> argparse.Namespace:
 
     :return: les argumentsanalyses
     """
-    parser = argparse.ArgumentParser(description="IDS/IPS maison - analyse de capture reseau")
+    parser = argparse.ArgumentParser(
+        description="IDS/IPS maison - analyse de capture reseau"
+    )
     parser.add_argument("--pcap", help="chemin du fichier pcap a analyser")
     parser.add_argument("--out", default="report.json", help="chemin du rapport JSON")
     parser.add_argument("--iface", help="interface reseau pour une capture live")

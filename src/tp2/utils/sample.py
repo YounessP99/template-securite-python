@@ -5,7 +5,8 @@ from collections import Counter
 class Sample:
     def __init__(self, path: str) -> None:
         self.path = path
-        self.data = open(path, "rb").read()
+        with open(path, "rb") as file:
+            self.data = file.read()
 
     def get_file_metadata(self) -> dict:
         """sha256, md5, taille, type de fichier, entropie de Shannon."""
