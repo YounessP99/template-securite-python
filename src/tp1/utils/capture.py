@@ -89,7 +89,7 @@ class Capture:
         announcements: dict = {}
 
         for packet in self.packets:
-            if packet.haslayer(ARP):
+            if packet.haslayer(ARP) and packet[ARP].op == 2:
                 ip = packet[ARP].psrc
                 mac = packet[ARP].hwsrc
 
