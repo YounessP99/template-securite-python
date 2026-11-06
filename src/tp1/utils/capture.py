@@ -126,15 +126,24 @@ class Capture:
         :return: la liste des attaques detectees
         """
         attacks: list[dict] = []
-        targeted_ports: defaultdict = defaultdict(set)
+        targeted_ports: dict = {}
 
         for packet in self.packets:
             if packet.haslayer(TCP) and packet[TCP].flags == "S":
-                targeted_ports[packet[IP].src].add(packet[TCP].dport)
+                ip = packet[IP].src
+                port = packet[TCP].dport
 
-        for ip, ports in targeted_ports.items():
+                if ip not in targeted_ports:
+                    targeted_ports[ip] = []
+
+                if port not in targeted_ports[ip]:
+                    targeted_ports[ip].append(port)
+
+        for ip in targeted_ports:
+            ports = targeted_ports[ip]
+
             if len(ports) >= threshold:
-                logger.warning(f"scan de ports detecte depuis {ip} ({len(ports)} ports")
+                logger.warning(f"scan de ports detecte depuis {ip} ({len(ports)} ports)")
                 attacks.append({"type": "port_scan", "attacker": ip})
 
         return attacks
