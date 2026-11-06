@@ -1,5 +1,5 @@
 import re
-from collections import Counter, defaultdict
+from collections import Counter
 
 from scapy.all import ARP, DNS, ICMP, IP, TCP, UDP, Ether, Raw, rdpcap, sniff
 
@@ -156,7 +156,7 @@ class Capture:
         """
         patterns = ["' or 1=1", "%27%20or%201=1", "union select", "sqlmap", "or 1=1"]
         attacks: list[dict] = []
-        attackers: set = set()
+        attackers: list = []
 
         for packet in self.packets:
             if not packet.haslayer(Raw) or not packet.haslayer(IP):
@@ -166,7 +166,8 @@ class Capture:
 
             for pattern in patterns:
                 if pattern in payload:
-                    attackers.add(packet[IP].src)
+                    if packet[IP].src not in attackers:
+                        attackers.append(packet[IP].src)
                     break
 
         for ip in attackers:
@@ -189,7 +190,13 @@ class Capture:
 
             payload = bytes(packet[Raw].load).decode("utf-8", errors="ignore")
 
-            if any(decoy in payload.lower() for decoy in decoys):
+            is_decoy = False
+
+            for decoy in decoys:
+                if decoy in payload.lower():
+                    is_decoy = True
+
+            if is_decoy:
                 logger.warning("Tentative de manipulation detectee, paquet ignore")
                 continue
 
