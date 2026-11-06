@@ -13,14 +13,26 @@ class Capture:
         self.summary = ""
         self.packets = []
 
-    def capture_traffic(self, pcap_file=None) -> None:
-        interface = self.interface
-        logger.info(f"Capture traffic from interface {interface}")
+    def capture_traffic(self, pcap_file: str | None = None) -> None:
+        """
+        Lit une capture depuis un fichier pcap, ou capture sur l'interface
 
-        if pcap_file:
-            self.packets = rdpcap(pcap_file)
-        else:
-            self.packets = sniff(iface=self.interface, count=100)
+        :param pcap_file: chemin du fichier pcap, ou None pour une capture live
+        """
+
+        try:
+            if pcap_file:
+                logger.info(f"Lecture de la capture {pcap_file}")
+                self.packets = rdpcap(pcap_file)
+            else:
+                logger.info(f"Capture sur l'interface {self.interface}")
+                self.packets = sniff(iface=self.interface, count=100)
+        except FileNotFoundError:
+            logger.error(f"Le fichier {pcap_file} est introuvable")
+            self.packets = []
+        except Exception as error:
+            logger.error(f"Erreur pendant la capture : {error}")
+            self.packets = []
 
         logger.info(f"{len(self.packets)} paquets récupérés")
 
