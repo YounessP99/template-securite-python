@@ -108,10 +108,9 @@ class Capture:
 
         for ip, macs in announcements.items():
             if len(macs) > 1:
-                attacker = poisoned.get(ip, macs[-1])
-
-                logger.warning(f"ARP spoofing detecte sur {ip} par {attacker}")
-                attacks.append({"type": "arp_spoofing", "attacker": attacker})
+                for mac in macs:
+                    logger.warning(f"ARP spoofing detecte sur {ip} par {mac}")
+                    attacks.append({"type": "arp_spoofing", "attacker": mac})
 
         return attacks
 
