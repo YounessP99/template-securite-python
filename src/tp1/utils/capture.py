@@ -83,17 +83,16 @@ class Capture:
         """
         Detecte une usurpation ARP : plusieurs MAC pour une meme IP
 
+        Toutes les MAC en conflit sont signalees, car la capture ne permet
+        pas de designer l'usurpateur avec certitude.
+
         :return: la liste des attaques detectees
         """
         attacks: list[dict] = []
         announcements: dict = {}
-        poisoned: dict = {}
 
         for packet in self.packets:
-            if not packet.haslayer(ARP):
-                continue
-
-            if packet[ARP].op == 2:
+            if packet.haslayer(ARP) and packet[ARP].op == 2:
                 ip = packet[ARP].psrc
                 mac = packet[ARP].hwsrc
 
@@ -102,9 +101,6 @@ class Capture:
 
                 if mac not in announcements[ip]:
                     announcements[ip].append(mac)
-
-            if packet[ARP].op == 1 and packet.dst != "ff:ff:ff:ff:ff:ff":
-                poisoned[packet[ARP].pdst] = packet.dst
 
         for ip, macs in announcements.items():
             if len(macs) > 1:
