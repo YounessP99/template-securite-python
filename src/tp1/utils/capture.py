@@ -54,7 +54,7 @@ class Capture:
 
         for packet in self.packets:
             if packet.haslayer(Ether):
-                protocols["ETHERNET"] += 1
+                protocols["Ethernet"] += 1
 
             if packet.haslayer(ARP):
                 protocols["ARP"] += 1
@@ -94,27 +94,21 @@ class Capture:
                 mac = packet[ARP].hwsrc
 
                 if ip not in announcements:
-                    announcements[ip] = {}
+                    announcements[ip] = []
 
                 if mac not in announcements[ip]:
-                    announcements[ip][mac] = 0
-
-                announcements[ip][mac] += 1
+                    announcements[ip].append(mac)
 
         for ip in announcements:
             macs = announcements[ip]
 
             if len(macs) > 1:
-                attacker = ""
-                lowest = -1
+                legitimate = macs[0]
 
                 for mac in macs:
-                    if lowest == -1 or macs[mac] < lowest:
-                        lowest = macs[mac]
-                        attacker = mac
-
-                logger.warning(f"ARP spoofing detect sur {ip} par {attacker}")
-                attacks.append({"type": "arp_spoofing", "attacker": attacker})
+                    if mac != legitimate:
+                        logger.warning(f"ARP spoofing detect sur {ip} par {mac}")
+                        attacks.append({"type": "arp_spoofing", "attacker": mac})
 
         return attacks
 
