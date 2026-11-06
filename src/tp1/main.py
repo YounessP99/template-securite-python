@@ -21,7 +21,10 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def main():
+def main() -> None:
+    """
+    Point d'entree du programme : analyse et ecrit le rapport
+    """
     logger.info("Starting TP1")
     args = parse_args()
 

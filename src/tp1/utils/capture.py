@@ -9,6 +9,9 @@ from tp1.utils.config import logger
 
 class Capture:
     def __init__(self) -> None:
+        """
+        Prepare une capture vide sur l'interface choisie
+        """
         self.interface = choose_interface()
         self.summary = ""
         self.packets = []
