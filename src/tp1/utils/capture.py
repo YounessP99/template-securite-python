@@ -86,15 +86,33 @@ class Capture:
         :return: la liste des attaques detectees
         """
         attacks: list[dict] = []
-        announcements: defaultdict = defaultdict(Counter)
+        announcements: dict = {}
 
         for packet in self.packets:
             if packet.haslayer(ARP):
-                announcements[packet[ARP].psrc][packet[ARP].hwsrc] += 1
+                ip = packet[ARP].psrc
+                mac = packet[ARP].hwsrc
 
-        for ip, macs in announcements.items():
+                if ip not in announcements:
+                    announcements[ip] = {}
+
+                if mac not in announcements[ip]:
+                    announcements[ip][mac] = 0
+
+                announcements[ip][mac] += 1
+
+        for ip in announcements:
+            macs = announcements[ip]
+
             if len(macs) > 1:
-                attacker = macs.most_common()[-1][0]
+                attacker = ""
+                lowest = -1
+
+                for mac in macs:
+                    if lowest == -1 or macs[mac] < lowest:
+                        lowest = macs[mac]
+                        attacker = mac
+
                 logger.warning(f"ARP spoofing detect sur {ip} par {attacker}")
                 attacks.append({"type": "arp_spoofing", "attacker": attacker})
 
