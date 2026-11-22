@@ -10,6 +10,7 @@ try:
 except ImportError:
     magic = None
 
+
 class Sample:
     def __init__(self, path: str) -> None:
         self.path = path
@@ -128,7 +129,7 @@ class Sample:
         urls_gardees = []
         for url in urls:
             if self.est_suspect(url):
-                urls_gardees.append(url)                        
+                urls_gardees.append(url)
 
         return {
             "domains": self.dedoublonner(domaines_gardes),
@@ -152,7 +153,7 @@ class Sample:
                 logger.warning(f"Tentative de manipulation detectee : {piege}")
 
         trouves = re.findall(r"FLAG=(ESGI\{[^}]+\})", texte)
-        
+
         if trouves:
             logger.info(f"Drapeau trouve : {trouves[0]}")
             return trouves[0]

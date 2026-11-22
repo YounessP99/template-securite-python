@@ -30,7 +30,7 @@ class Triage:
             "file_type": meta["file_type"],
             "iocs": sample.extract_iocs(),
             "imports": [],
-            "yara_matches": [],
+            "yara_matches": self.scanner.scan(sample.data),
             "family_guess": "unknown",
             "mitre_attack": [],
             "llm_summary": "",
