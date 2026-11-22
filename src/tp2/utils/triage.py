@@ -35,7 +35,7 @@ class Triage:
             "mitre_attack": [],
             "llm_summary": "",
             "score": 0,
-            "flag": None,
+            "flag": sample.find_flag(),
         }
 
         return {}

@@ -138,6 +138,27 @@ class Sample:
             "registry": self.dedoublonner(registre),
         }
 
+    def find_flag(self) -> str | None:
+        """
+        Cherche le drapeau marque FLAG= dans les chaines du fichier
+
+        :return: le drapeau trouve, ou None
+        """
+        texte = self.get_strings()
+        pieges = ["AI_INSTRUCTIONS", "NOTE_TO_AI", "ANALYST_NOTE"]
+
+        for piege in pieges:
+            if piege in texte:
+                logger.warning(f"Tentative de manipulation detectee : {piege}")
+
+        trouves = re.findall(r"FLAG=(ESGI\{[^}]+\})", texte)
+        
+        if trouves:
+            logger.info(f"Drapeau trouve : {trouves[0]}")
+            return trouves[0]
+
+        return None
+
     def parse_binary(self) -> dict:
         """imports / sections via lief (si PE/ELF)."""
         raise NotImplementedError
