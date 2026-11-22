@@ -54,13 +54,13 @@ def main() -> None:
             echecs += 1
             continue
 
-        out_path = os.path.join(args.out, f"{result['sha256']}.json")
+        out_path = os.path.join(args.out, f"{name}.triage.json")
 
         with open(out_path, "w", encoding="utf-8") as report_file:
             json.dump(result, report_file, indent=2)
 
         analyses += 1
-        logger.info(f"{name} -> {result['sha256']}.json")
+        logger.info(f"{name} -> {out_path}")
 
     logger.info(f"{analyses} echantillon(s) analyse(s), {echecs} en echec")
 

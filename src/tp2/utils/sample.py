@@ -1,3 +1,4 @@
+import re
 import hashlib
 import math
 from collections import Counter
@@ -55,9 +56,87 @@ class Sample:
 
         return "data"
 
+    def get_strings(self) -> str:
+        """
+        Extrait les chaines de caracteres lisibles du fichier
+
+        :return: toutes les chaines mises bout a bout
+        """
+        morceaux = re.findall(rb"[\x20-\x7e]{4,}", self.data)
+        texte = ""
+
+        for morceau in morceaux:
+            texte = texte + morceau.decode("ascii", errors="ignore") + " "
+
+        return texte
+
+    def dedoublonner(self, valeurs: list) -> list:
+        """
+        Supprime les doublons d'une liste et la trie
+
+        :param valeurs: la liste a nettoyer
+        :return: la liste triee sans doublons
+        """
+        resultat = []
+
+        for valeur in valeurs:
+            if valeur not in resultat:
+                resultat.append(valeur)
+
+        return sorted(resultat)
+
+    def est_suspect(self, valeur: str) -> bool:
+        """
+        Dit si un domaine ou une URL merite d'etre signale
+
+        :param valeur: le domaine ou l'URL a examiner
+        :return: True si la valeur est retenue comme indicateur
+        """
+        legitimes = ["gnu.org", "translationproject.org"]
+        tlds = ["com", "net", "org", "test", "info", "biz", "io", "ru", "cn", "xyz"]
+
+        for legitime in legitimes:
+            if legitime in valeur:
+                return False
+
+        for tld in tlds:
+            if valeur.endswith("." + tld) or ("." + tld + "/") in valeur:
+                return True
+
+        return False
+
     def extract_iocs(self) -> dict:
-        """domaines, ips, urls, mutex, registry (regex sur les strings)."""
-        raise NotImplementedError
+        """
+        Cherche les indicateurs de compromission dans les chaines du fichier
+
+        :return: un dictionnaire domains, ips, urls, mutex, registry
+        """
+        texte = self.get_strings()
+
+        domaines = re.findall(r"\b(?:[a-z0-9-]+\.)+[a-z]{2,}\b", texte, re.IGNORECASE)
+        ips = re.findall(r"\b(?:\d{1,3}\.){3}\d{1,3}\b", texte)
+        urls = re.findall(r"https?://[^\s\"']+", texte)
+
+        mutex = re.findall(r"Global\\[A-Za-z0-9]+", texte)
+        registre = re.findall(r"HK(?:CU|LM)\\[^\s\"']+", texte)
+
+        domaines_gardes = []
+        for domaine in domaines:
+            if self.est_suspect(domaine):
+                domaines_gardes.append(domaine)
+
+        urls_gardees = []
+        for url in urls:
+            if self.est_suspect(url):
+                urls_gardees.append(url)                        
+
+        return {
+            "domains": self.dedoublonner(domaines_gardes),
+            "ips": self.dedoublonner(ips),
+            "urls": self.dedoublonner(urls_gardees),
+            "mutex": self.dedoublonner(mutex),
+            "registry": self.dedoublonner(registre),
+        }
 
     def parse_binary(self) -> dict:
         """imports / sections via lief (si PE/ELF)."""
