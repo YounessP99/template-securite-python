@@ -1,6 +1,6 @@
-import re
 import hashlib
 import math
+import re
 from collections import Counter
 
 from tp2.utils.config import logger
