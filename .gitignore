@@ -11,3 +11,4 @@ app.log
 .env
 *.pcap
 report.json
+out/
