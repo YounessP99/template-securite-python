@@ -16,8 +16,11 @@ def scanner():
 
 
 def test_compiler_regles(scanner):
+    # When
+    regles = scanner.compiler_regles()
+
     # Then
-    assert scanner.regles is not None
+    assert regles is not None
 
 
 def test_scan(scanner):
