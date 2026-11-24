@@ -7,11 +7,12 @@ chronométré). Voir tp3-breach-the-target.md.
 """
 
 import argparse
+import base64
+import socket
 from pathlib import Path
 
 import requests
 
-from tp3.utils.config import logger
 from tp3.utils.config import logger
 from tp3.utils.session import Session
 
@@ -65,13 +66,40 @@ def breach_web(target: str) -> tuple[str, int, bytes]:
     # si après 10 essais rien n'a marché
     raise RuntimeError("Captcha non resolu apres plusieurs essais")
 
+def xor_bytes(data, key):
+    # on applique le XOR octet par octet, en répétant la clé si besoin
+    resultat = bytearray()
+    for i in range(len(data)):
+        resultat.append(data[i] ^ key[i % len(key)])
+    return bytes(resultat)
+
 
 def breach_network(host: str, port: int, key: bytes) -> str:
     """pwntools/socket : décode le flux base64+XOR en boucle sous 30 s.
 
     Retourne le flag final. Indices : pwn.remote, base64.
     """
-    raise NotImplementedError
+    # on se connecte au service TCP
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    sock.connect((host, port))
+    fichier = sock.makefile("rb")   # pour lire la connexion ligne par ligne
+
+    # la 1re ligne est juste un message d'explication -> on la lit et on l'ignore
+    fichier.readline()
+
+    # il y a 3 rounds à résoudre
+    for _ in range(3):
+        ligne = fichier.readline().strip()   # la ligne du round
+        brouille = base64.b64decode(ligne)   # on défait le base64
+        token = xor_bytes(brouille, key)     # on défait le XOR -> le token en clair
+        sock.sendall(token + b"\n")          # on renvoie le token
+
+    # après les 3 rounds, le serveur envoie "OK <flag>"
+    reponse = fichier.readline().strip()
+    texte = reponse.decode()                 # on passe des octets au texte
+    flag = texte.removeprefix("OK ")         # on enlève le "OK " pour garder le flag
+    sock.close()
+    return flag
 
 
 def main() -> None:
