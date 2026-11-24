@@ -34,7 +34,9 @@ class Captcha:
         # on demande à Tesseract de lire l'image
         # --psm 7 = "c'est une seule ligne de texte"
         # la whitelist = on n'autorise que majuscules + chiffres (le code n'a que ça)
-        config = "--psm 7 -c tessedit_char_whitelist=ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+        config = (
+            "--psm 7 -c tessedit_char_whitelist=ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+        )
         texte = pytesseract.image_to_string(img, config=config)
 
         # on nettoie : on enlève espaces/retours à la ligne et on passe en majuscules

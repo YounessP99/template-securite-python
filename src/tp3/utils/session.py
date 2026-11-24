@@ -5,8 +5,10 @@ from src.tp3.utils.captcha import Captcha
 
 class Session:
     def __init__(self, url, http=None):
-        self.url = url                           # adresse de base de la cible
-        self.http = http or requests.Session()   # le navigateur partagé (garde les cookies)
+        self.url = url  # adresse de base de la cible
+        self.http = (
+            http or requests.Session()
+        )  # le navigateur partagé (garde les cookies)
         self.captcha_value = ""
         self.flag_value = ""
         self.valid_flag = ""
@@ -41,7 +43,9 @@ class Session:
         self.valid_flag = donnees["flag1"]
         self.host = donnees["host"]
         self.port = donnees["port"]
-        self.key = bytes.fromhex(donnees["key"])   # la clé arrive en hexa -> on la convertit en octets
+        self.key = bytes.fromhex(
+            donnees["key"]
+        )  # la clé arrive en hexa -> on la convertit en octets
         return True
 
     def get_flag(self):
